@@ -23,9 +23,11 @@ SAMPLE_LEN = SEQ_LEN-NFRAMES   #Aathira : changed the equation
 MAX_FRAMES = 1000*SAMPLE_LEN
 DEFAULT_FACE_DIM = 292
 CASC_PATH = 'haarcascade_frontalface_alt.xml'
-datapath = 'dataset/test'
-VIDDATA_PATH = 'viddata.npy'
-AUDDATA_PATH = 'auddata.npy'
+datapath = 'dataset/100videos'
+alldatapath = 'dataset/data'
+VIDDATA_PATH = 'viddata0.npy'
+AUDDATA_PATH = 'auddata0.npy'
+
 
 def process_video(vf, viddata, vidctr, faceCascade):
 	temp_frames = np.zeros((SEQ_LEN*CHANNELS,FRAME_ROWS,FRAME_COLS),dtype="uint8")
@@ -83,10 +85,10 @@ def show_progress(progress, step):
 	return progress
 
 def main():
-	viddata_path = join(datapath,VIDDATA_PATH)
-	auddata_path = join(datapath,AUDDATA_PATH)
+	viddata_path = join(alldatapath,VIDDATA_PATH)
+	auddata_path = join(alldatapath,AUDDATA_PATH)
 	if isfile(viddata_path) and isfile(auddata_path):
-		print ('Data has already been processed and saved in %s'%(datapath))
+		print ('Data has already been processed and saved in %s'%(alldatapath))
 	else:
 		print ('Processing video and audio data...')
 		viddata = np.zeros((MAX_FRAMES,CHANNELS,FRAME_ROWS,FRAME_COLS),dtype="uint8")

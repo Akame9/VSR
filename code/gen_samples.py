@@ -8,7 +8,7 @@ import moviepy.editor as mpy
 import argparse
 from scipy.io.wavfile import write
 
-VIDPATH = 'dataset/test/'
+VIDPATH = 'dataset/100videos/'
 RESPATH = '../results/'
 SR = 8000
 FPS = 25

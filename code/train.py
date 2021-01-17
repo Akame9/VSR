@@ -26,83 +26,74 @@ CHANNELS = COLORS*NFRAMES
 TRAIN_PER = 0.8
 LR = 0.01
 nb_pool = 2
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 DROPOUT = 0.25 
 DROPOUT2 = 0.5
 EPOCHS = 60
 FINETUNE_EPOCHS = 10
 activation_func2 = 'tanh'
 
-respath = '../results/'
+respath = 'results/'
 weight_path = join(respath,'weights/')
-datapath = '../dataset/'
+alldatapath = 'dataset/data/'
 
-def load_data(datapath):
-	viddata_path = join(datapath,'viddata.npy')
-	auddata_path = join(datapath,'auddata.npy')
+def load_data(datapath, part):
+	viddata_path = join(datapath,'viddata{}.npy'.format(part))
+	auddata_path = join(datapath,'auddata{}.npy'.format(part))
 	if isfile(viddata_path) and isfile(auddata_path):
 		print ('Loading data...')
 		viddata = np.load(viddata_path)
 		auddata = np.load(auddata_path)
-		vidctr = len(auddata)
+	#	vidctr = len(auddata)
 		print ('Done.')
 		return viddata, auddata
 	else:
 		print ('Preprocessed data not found.')
 		sys.exit()
-
+'''
 def split_data(viddata, auddata):
 	vidctr = len(auddata)
 	Xtr = viddata[:int(vidctr*TRAIN_PER),:,:,:]
 	Ytr = auddata[:int(vidctr*TRAIN_PER),:]
 	Xte = viddata[int(vidctr*TRAIN_PER):,:,:,:]
 	Yte = auddata[int(vidctr*TRAIN_PER):,:]
-	return (Xtr, Ytr), (Xte, Yte)
-
+	return (Xtr, Ytr)
+'''
 
 def build_model(net_out):
 	model = Sequential()
 	model.add(Convolution2D(32, 3, padding='same', kernel_initializer='he_normal', data_format='channels_first', input_shape=(CHANNELS, FRAME_ROWS, FRAME_COLS)))
-	print('Hello1')
 	model.add(BatchNormalization())
 	model.add(LeakyReLU())	
 	model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool), data_format='channels_first'))
 	model.add(Convolution2D(32, 3, padding='same', kernel_initializer='he_normal', data_format='channels_first'))
-	print('Hello2')
 	model.add(BatchNormalization())
 	model.add(LeakyReLU())	
 	model.add(Convolution2D(32, 3, padding='same', kernel_initializer='he_normal', data_format='channels_first'))
-	print('Hello3')
 	model.add(BatchNormalization())
 	model.add(LeakyReLU())	
 	model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool), data_format='channels_first'))  #Aathira : added padding in all MaxPool
 	model.add(Dropout(DROPOUT))
 	model.add(Convolution2D(64, 3, padding='same', kernel_initializer='he_normal', data_format='channels_first'))
-	print('Hello4')
 	model.add(BatchNormalization())
 	model.add(LeakyReLU())	
 	model.add(Convolution2D(64, 3, padding='same', kernel_initializer='he_normal', data_format='channels_first'))
-	print('Hello5')
 	model.add(BatchNormalization())
 	model.add(LeakyReLU())	
 	model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool), data_format='channels_first'))
 	model.add(Dropout(DROPOUT))
 	model.add(Convolution2D(128, 3, padding='same', kernel_initializer='he_normal', data_format='channels_first'))
-	print('Hello6')
 	model.add(BatchNormalization())
 	model.add(LeakyReLU())	
 	model.add(Convolution2D(128, 3, padding='same', kernel_initializer='he_normal', data_format='channels_first'))
-	print('Hello7')
 	model.add(BatchNormalization())
 	model.add(LeakyReLU())	
 	model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool), data_format='channels_first'))
 	model.add(Dropout(DROPOUT))
 	model.add(Convolution2D(128, 3, padding='same', kernel_initializer='he_normal', data_format='channels_first'))
-	print('Hello8')
 	model.add(BatchNormalization())
 	model.add(LeakyReLU())	
 	model.add(Convolution2D(128, 3, padding='same', kernel_initializer='he_normal', data_format='channels_first'))
-	print('Hello9')
 	model.add(BatchNormalization())
 	model.add(Activation(activation_func2))	
 	model.add(MaxPooling2D(pool_size=(nb_pool, nb_pool), data_format='channels_first'))
@@ -117,62 +108,81 @@ def build_model(net_out):
 	model.add(Dense(net_out))
 	print(model.summary())
 	return model
-
+'''
 def savedata(Ytr, Ytr_pred, Yte, Yte_pred, respath=respath):
 	np.save(join(respath,'Ytr.npy'),Ytr)
 	np.save(join(respath,'Ytr_pred.npy'),Ytr_pred)
-	np.save(join(respath,'Yte.npy'),Yte)
-	np.save(join(respath,'Yte_pred.npy'),Yte_pred)
-
-def standardize_data(Xtr, Ytr, Xte, Yte):
+#	np.save(join(respath,'Yte.npy'),Yte)
+#	np.save(join(respath,'Yte_pred.npy'),Yte_pred)
+'''
+def standardize_data(Xtr, Ytr):
 	Xtr = Xtr.astype('float32')
-	Xte = Xte.astype('float32')
+#	Xte = Xte.astype('float32')
 	Xtr /= 255
-	Xte /= 255
+#	Xte /= 255
 	xtrain_mean = np.mean(Xtr)
 	Xtr = Xtr-xtrain_mean
-	Xte = Xte-xtrain_mean
+#	Xte = Xte-xtrain_mean
 	Y_means = np.mean(Ytr,axis=0) 
 	Y_stds = np.std(Ytr, axis=0)
 	Ytr_norm = ((Ytr-Y_means)/Y_stds)
-	Yte_norm = ((Yte-Y_means)/Y_stds)
-	return Xtr, Ytr_norm, Xte, Yte_norm, Y_means, Y_stds
+#	Yte_norm = ((Yte-Y_means)/Y_stds)
+	return Xtr, Ytr_norm
 
-def train_net(model, Xtr, Ytr_norm, Xte, Yte_norm, batch_size=BATCH_SIZE, epochs=EPOCHS, finetune=False):
+def train_net(model, Xtr, Ytr_norm, Xvd, Yvd_norm, batch_size=BATCH_SIZE, epochs=EPOCHS, finetune=False, loadexiting=False):
+	if loadexiting:
+		newest = max(glob.iglob(weight_path+'*.hdf5'), key=os.path.getctime)
+		model.load_weights(newest)
+		print("Existing model loaded")
 	if finetune:
 		newest = max(glob.iglob(weight_path+'*.hdf5'), key=os.path.getctime)
 		model.load_weights(newest)
 		lr = LR/10
 	else:
 		lr = LR
+
 	adam = Adam(lr=lr)
 	model.compile(loss='mean_squared_error', optimizer=adam)
 	checkpointer = ModelCheckpoint(filepath=weight_path+'weights.{epoch:02d}-{val_loss:.4f}.hdf5',
 		monitor='val_loss', verbose=1, save_best_only=True)
-	history = model.fit(Xtr, Ytr_norm, batch_size=batch_size, nb_epoch=epochs,
-		verbose=1, validation_data=(Xte, Yte_norm),callbacks=[checkpointer])
-	newest = max(glob.iglob(weight_path+'*.hdf5'), key=os.path.getctime)
-	model.load_weights(newest)
+	history = model.fit(Xtr, Ytr_norm, batch_size=batch_size, epochs=epochs,
+		verbose=2, validation_data=(Xvd, Yvd_norm), callbacks=[checkpointer])
+	#newest = max(glob.iglob(weight_path+'*.hdf5'), key=os.path.getctime)
+	#model.load_weights(newest)
 	return model
+
 
 def predict(model, X, Y_means, Y_stds, batch_size=BATCH_SIZE):
 	Y_pred = model.predict(X, batch_size=batch_size, verbose=1)
-	Y_pred = (Y_pred*Y_stds+Y_means)
+#	Y_pred = (Y_pred*Y_stds+Y_means)
 	return Y_pred
 
 def main():
 	if not os.path.exists(weight_path):
 		os.makedirs(weight_path)
-	viddata, auddata = load_data(datapath)	
-	(Xtr,Ytr), (Xte, Yte) = split_data(viddata, auddata)
-	net_out = Ytr.shape[1]
-	Xtr, Ytr_norm, Xte, Yte_norm, Y_means, Y_stds = standardize_data(Xtr, Ytr, Xte, Yte)
+	Xtr=[]
+	Ytr=[]
+	for i in range(1):
+		viddata, auddata = load_data(alldatapath,i)	
+#	(Xtr,Ytr), (Xte, Yte) = split_data(viddata, auddata)
+		Xtr.append(viddata)
+		Ytr.append(auddata)
+		net_out = Ytr[i].shape[1]
+		Xtr[i], Ytr[i] = standardize_data(Xtr[i], Ytr[i])
 	model = build_model(net_out)
-	model = train_net(model, Xtr, Ytr_norm, Xte, Yte_norm)
-	model = train_net(model, Xtr, Ytr_norm, Xte, Yte_norm, epochs=FINETUNE_EPOCHS, finetune=True)
-	Ytr_pred = predict(model, Xtr, Y_means, Y_stds)
-	Yte_pred = predict(model, Xte, Y_means, Y_stds)
-	savedata(Ytr, Ytr_pred, Yte, Yte_pred)
-
+	model = train_net(model, Xtr[0], Ytr[0], Xtr[0], Ytr[0], epochs=1)
+'''
+	model = train_net(model, Xtr[0], Ytr[0], Xtr[-1], Ytr[-1], epochs=1)
+	model = train_net(model, Xtr[1], Ytr[1], Xtr[-1], Ytr[-1], epochs=1,loadexiting=True)
+'''
+#	model = train_net(model, Xtr, Ytr_norm, Xte, Yte_norm, epochs=FINETUNE_EPOCHS, finetune=True)
+#	Ytr_pred = predict(model, Xtr, Y_means, Y_stds)
+#	Yte_pred = predict(model, Xte, Y_means, Y_stds)
+#	savedata(Ytr, Ytr_pred)
+'''
+	for i in range(EPOCHS):
+		for j in range(2):
+			model = train_net(model, Xtr[j], Ytr[j], Xtr[-1], Ytr[-1], epochs=1,loadexiting=True)
+'''
 if __name__ == "__main__":
 	main()

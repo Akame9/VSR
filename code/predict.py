@@ -8,7 +8,7 @@ import train
 import argparse
 
 RESPATH = 'pretrained_results/'
-DATAPATH = 'dataset/test/'
+DATAPATH = 'dataset/data/'
 
 def get_args():
     parser = argparse.ArgumentParser(description="Use pretrained model to get predictions for data in ../dataset/")
@@ -36,7 +36,7 @@ def main():
 	weight_path = args.weight_path
 	if not os.path.exists(RESPATH):
 		os.makedirs(RESPATH)
-	viddata, auddata = train.load_data(DATAPATH)
+	viddata, auddata = train.load_data(DATAPATH,0)
 	net_out = auddata.shape[1]
 	viddata, auddata_norm, auddata_means, auddata_stds = standardize_data(viddata, auddata)
 	model = train.build_model(net_out)
