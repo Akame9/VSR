@@ -23,10 +23,10 @@ SAMPLE_LEN = SEQ_LEN-NFRAMES   #Aathira : changed the equation
 MAX_FRAMES = 1000*SAMPLE_LEN
 DEFAULT_FACE_DIM = 292
 CASC_PATH = 'haarcascade_frontalface_alt.xml'
-datapath = 'dataset/100videos'
+datapath = 'dataset/200videos4'
 alldatapath = 'dataset/data'
-VIDDATA_PATH = 'viddata0.npy'
-AUDDATA_PATH = 'auddata0.npy'
+VIDDATA_PATH = 'viddata4.npy'
+AUDDATA_PATH = 'auddata4.npy'
 
 
 def process_video(vf, viddata, vidctr, faceCascade):

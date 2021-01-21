@@ -29,7 +29,7 @@ nb_pool = 2
 BATCH_SIZE = 16
 DROPOUT = 0.25 
 DROPOUT2 = 0.5
-EPOCHS = 60
+EPOCHS = 3
 FINETUNE_EPOCHS = 10
 activation_func2 = 'tanh'
 
@@ -129,9 +129,14 @@ def standardize_data(Xtr, Ytr):
 #	Yte_norm = ((Yte-Y_means)/Y_stds)
 	return Xtr, Ytr_norm
 
-def train_net(model, Xtr, Ytr_norm, Xvd, Yvd_norm, batch_size=BATCH_SIZE, epochs=EPOCHS, finetune=False, loadexiting=False):
+def train_net(model, Xtr, Ytr_norm, Xvd, Yvd_norm, batch_size=BATCH_SIZE, epochs=EPOCHS, finetune=False, loadexiting=False,epochno=1,datapart=0):
 	if loadexiting:
-		newest = max(glob.iglob(weight_path+'*.hdf5'), key=os.path.getctime)
+		#newest = max(glob.iglob(weight_path+'*.hdf5'), key=os.path.getctime)
+		if(datapart==0):
+			newest = weight_path+'weights.{}-{}.hdf5'.format(epochno-1,3)
+		else:
+			newest = weight_path+'weights.{}-{}.hdf5'.format(epochno,datapart-1)
+		print("NEWEST MODEL : "+newest)
 		model.load_weights(newest)
 		print("Existing model loaded")
 	if finetune:
@@ -143,7 +148,7 @@ def train_net(model, Xtr, Ytr_norm, Xvd, Yvd_norm, batch_size=BATCH_SIZE, epochs
 
 	adam = Adam(lr=lr)
 	model.compile(loss='mean_squared_error', optimizer=adam)
-	checkpointer = ModelCheckpoint(filepath=weight_path+'weights.{epoch:02d}-{val_loss:.4f}.hdf5',
+	checkpointer = ModelCheckpoint(filepath=weight_path+'weights.{}-{}.hdf5'.format(epochno,datapart),
 		monitor='val_loss', verbose=1, save_best_only=True)
 	history = model.fit(Xtr, Ytr_norm, batch_size=batch_size, epochs=epochs,
 		verbose=2, validation_data=(Xvd, Yvd_norm), callbacks=[checkpointer])
@@ -162,27 +167,30 @@ def main():
 		os.makedirs(weight_path)
 	Xtr=[]
 	Ytr=[]
-	for i in range(1):
+	
+	for i in range(5):
 		viddata, auddata = load_data(alldatapath,i)	
 #	(Xtr,Ytr), (Xte, Yte) = split_data(viddata, auddata)
 		Xtr.append(viddata)
 		Ytr.append(auddata)
 		net_out = Ytr[i].shape[1]
+		print(net_out)
 		Xtr[i], Ytr[i] = standardize_data(Xtr[i], Ytr[i])
-	model = build_model(net_out)
-	model = train_net(model, Xtr[0], Ytr[0], Xtr[0], Ytr[0], epochs=1)
-'''
+	model = build_model(net_out)	
 	model = train_net(model, Xtr[0], Ytr[0], Xtr[-1], Ytr[-1], epochs=1)
-	model = train_net(model, Xtr[1], Ytr[1], Xtr[-1], Ytr[-1], epochs=1,loadexiting=True)
-'''
+
 #	model = train_net(model, Xtr, Ytr_norm, Xte, Yte_norm, epochs=FINETUNE_EPOCHS, finetune=True)
 #	Ytr_pred = predict(model, Xtr, Y_means, Y_stds)
 #	Yte_pred = predict(model, Xte, Y_means, Y_stds)
 #	savedata(Ytr, Ytr_pred)
-'''
-	for i in range(EPOCHS):
-		for j in range(2):
-			model = train_net(model, Xtr[j], Ytr[j], Xtr[-1], Ytr[-1], epochs=1,loadexiting=True)
-'''
+	datapart = 1
+
+	for i in range(1,EPOCHS+1):
+		print("Epoch no. : ",i)
+		while(datapart<4):
+			model = train_net(model, Xtr[datapart], Ytr[datapart], Xtr[-1], Ytr[-1], epochs=1,loadexiting=True,epochno=i,datapart=datapart)
+			datapart +=1
+		datapart = 0
+
 if __name__ == "__main__":
 	main()
